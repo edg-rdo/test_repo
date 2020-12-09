@@ -14,24 +14,12 @@ description: ''
 
 <p>Howdy,</p>
 <p>Here's how Python and R interact.</p>
-<pre class="r"><code>#here is a regular R markdown chunk
-print(&quot;here we go&quot;)</code></pre>
+<pre class="r"><code>print(&quot;here we go&quot;)</code></pre>
 <pre><code>## [1] &quot;here we go&quot;</code></pre>
-<pre class="r"><code>eh &lt;- &quot;ok&quot;</code></pre>
+<pre class="r"><code>#here is a regular R markdown chunk
+eh &lt;- &quot;ok&quot;</code></pre>
 <pre class="r"><code># R CHUNK
-names(knitr::knit_engines$get())</code></pre>
-<pre><code>##  [1] &quot;awk&quot;         &quot;bash&quot;        &quot;coffee&quot;      &quot;gawk&quot;        &quot;groovy&quot;     
-##  [6] &quot;haskell&quot;     &quot;lein&quot;        &quot;mysql&quot;       &quot;node&quot;        &quot;octave&quot;     
-## [11] &quot;perl&quot;        &quot;psql&quot;        &quot;Rscript&quot;     &quot;ruby&quot;        &quot;sas&quot;        
-## [16] &quot;scala&quot;       &quot;sed&quot;         &quot;sh&quot;          &quot;stata&quot;       &quot;zsh&quot;        
-## [21] &quot;highlight&quot;   &quot;Rcpp&quot;        &quot;tikz&quot;        &quot;dot&quot;         &quot;c&quot;          
-## [26] &quot;cc&quot;          &quot;fortran&quot;     &quot;fortran95&quot;   &quot;asy&quot;         &quot;cat&quot;        
-## [31] &quot;asis&quot;        &quot;stan&quot;        &quot;block&quot;       &quot;block2&quot;      &quot;js&quot;         
-## [36] &quot;css&quot;         &quot;sql&quot;         &quot;go&quot;          &quot;python&quot;      &quot;julia&quot;      
-## [41] &quot;sass&quot;        &quot;scss&quot;        &quot;theorem&quot;     &quot;lemma&quot;       &quot;corollary&quot;  
-## [46] &quot;proposition&quot; &quot;conjecture&quot;  &quot;definition&quot;  &quot;example&quot;     &quot;exercise&quot;   
-## [51] &quot;proof&quot;       &quot;remark&quot;      &quot;solution&quot;</code></pre>
-<pre class="r"><code>library(reticulate)</code></pre>
+library(reticulate)</code></pre>
 <pre class="python"><code>#PYTHON CHUNK
 x = &quot;he&quot;
 print(r.eh,x)</code></pre>
