@@ -19,10 +19,8 @@ eh <- "ok"
 ```
 
 ```{R}
-
 # R CHUNK
 library(reticulate)
-
 ```
 
 ```{python}
