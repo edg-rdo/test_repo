@@ -27,7 +27,7 @@ library(reticulate)
 
 ```{python}
 #PYTHON CHUNK
-x = "he"
+x = "yes"
 print(r.eh,x)
 
 ```
