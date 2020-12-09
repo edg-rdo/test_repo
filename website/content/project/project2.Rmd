@@ -1,0 +1,299 @@
+---
+title: "Project 2: Movies"
+author: "Ed Montemayor emm3945"
+date: "11/17/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = TRUE, fig.align = "center", warning = F, message = F,
+tidy=TRUE, tidy.opts=list(width.cutoff=60), R.options=list(max.print=100))
+```
+
+# Introduction
+## For this study I have chosen the *movies* dataset from jtools. This dataset piqued my interest as it includes information about which films pass the Bechdel test (a measure of of the representation of women). The main variables that will be studied are genre5 (the primary genre of each film), rated (the Motion Picture Association's rating of the film), runtime (the length of each of film), budget (each film's budget), imdb_rating (each film's rating on imdb), and the bechdel_binary (whether the film passed the Bechdel test; FALSE = non-bechdel film, TRUE = bechdel film). Overall, there are 841 observations in this dataset.
+```{R}
+library(jtools)
+library(tidyverse)
+A_movies <- movies
+```
+
+# What is MANOVA and its Assumptions
+### The first test that will be conducted on this dataset is MANOVA (Multivariate Analysis of Variance). It is a test for comparing multivariate sample means. As a multivariate procedure, it is used when there are two or more dependent variables. MANOVA has numerous assumptions: random samples and independent observations, dependent variables (DVs) have multivariate normality, homogeneity of within-group covariance matrices, linear relationships among DVs, no extreme univariate or multivariate outliers, and no multicollinearity. Many of these assumptions are difficult to meet for one set of dataset. As such, before conducting MANOVA on our dataset we will check how many of the assumptions are met with the code below. When testing for multivariate normality for each group (movie genre), all except the "Horror" and "Other" genre had p-values less than 0.05 (The "Horror" group had a p-value of 0.0001340508 and the "Other" group had a p-value of 0.5178997), as such the assumption about multivariate normality was violated. This is further supported when examining a plot of imdb_rating vs. runtime between each genre — all genres are not relatively similar in regards to point clustering. Testing for the equivalence of covariance matrices through Box's M test yielded significant results (not null; the p-value was 1.709767e-34), thus that assumption was also violated. In viewing covariance matrices for each group, none seemed similar to each other, as such we must assume that the homogeneity of within-group covariance matrices assumption is also violated. Despite this, we will continue in our MANOVA of the *movies* dataset.
+```{R}
+
+#assessing assumptions
+library(rstatix)
+
+group <- A_movies$genre5
+DVs <- A_movies %>% select(runtime,budget,imdb_rating)
+
+#Test multivariate normality for each group (null: assumption met)
+sapply(split(DVs,group), mshapiro_test)
+
+#If any p<.05, stop (assumption violated). If not, test homogeneity of covariance matrices
+
+#Box's M test (null: assumption met)
+box_m(DVs, group)
+
+#Viewing covariance matrices for each group
+lapply(split(DVs,group), cov)
+
+#Eyeballing multivariate normality for movie runtime and imdb rating (this is just serving as a double-check on the sapply code from earlier)
+ggplot(A_movies, aes(x = runtime, y = imdb_rating)) + geom_point(alpha = .5) + geom_density_2d(h=2) + facet_wrap(~genre5)
+
+```
+
+# Conducting MANOVA
+###  A one-way MANOVA was conducted to determine the effect of movie genre (Comedy, Drama, Horror/Thriller, and Other) on three dependent variables (runtime, budget, and imdb_rating). The null hypothesis is, for each response variable (in this case runtime, budget , imdb_rating, and bechdel_binary), the means of all genres are equal. The alternative hypothesis is, for at least 1 response variable, at least 1 genre mean differs. Significant differences were found among the four movie genres for at least one of the dependent variables, P illai trace =  0.43253, pseudo F (12, 2508) = 35.21, p < 0.0001. After conducting the MANOVA, it is apparent that the results are significant as the p-value is lower than 0.05, and so we must accept the alternative hypothesis and reject the null. Moreover, Univariate ANOVAs for each dependent variable were conducted as follow-up tests to the MANOVA, using the Bonferroni method for controlling Type I error rates for multiple comparisons. The univariate ANOVAs for runtime, budget, and imdb_rating were also significant, F (4, 836) = 40.474 and p < .0001,  F (4, 836) = 55.132 and p < .0001, and F (4, 836) = 24.914 and p < .0001, respectively, and so we can assume that for runtime, budget, and imdb_rating at least one genre differs. Post hoc analyses were performed conducting pairwise comparisons to determine which genres differed in runtime, imdb_rating, and budget All movie genres were found to differ significantly from each other in terms of runtime, imdb_rating, and budget after adjusting for multiple comparisons (bonferroni α = .05/34 = 0.001470588). If not adjusted, the type I error probability rate was 0.8251754.
+
+```{R}
+## Without Bechdel Binary (as only numeric response variables are being asked for)
+#MANOVA
+man2<-manova(cbind(runtime,budget,imdb_rating)~genre5, data=A_movies)
+summary(man2)
+
+#ANOVA
+summary.aov(man2)
+
+
+A_movies%>%group_by(genre5)%>%summarize(mean(runtime),mean(imdb_rating),mean(budget))
+
+#POST-HOC TESTS
+pairwise.t.test(A_movies$runtime, A_movies$genre5, p.adj = "none")
+pairwise.t.test(A_movies$imdb_rating, A_movies$genre5, p.adj = "none")
+pairwise.t.test(A_movies$budget, A_movies$genre5, p.adj = "none")
+
+#HW6 QUESTION 5 reference
+#FOR ADJUSTMENT PAGE  87 41/58
+
+#0.05/1 MANOVA + 3 ANOVA + 30 t-tests
+0.05/34
+1 - 0.95^34
+
+```
+
+# Randomization Test 
+### Given that numerous MANOVA assumptions have been violated we can conduct a randomization test - a process where we scramble the relationship between variables in our sample to generate a null distribution against which to compare an observed test statistic. For this test we will be finding the mean difference; the null hypothesis is that mean *difference* for imdb_rating is the same for bechdel vs. non-bechdel films, and the alternative hypothesis is that mean *difference* for imdb_rating is different for bechdel vs. non-bechdel films. From the two tailed tests it can be seen that the p-values is not significant, *and so we fail to reject the null hypothesis* — meaning that there is no significant difference in imdb_rating for bechdel movies vs. non-bechdel ones.
+
+```{R}
+
+ggplot(A_movies,aes(imdb_rating,fill=bechdel_binary))+geom_histogram(bins=6.5)+
+  facet_wrap(~bechdel_binary,ncol=2)+theme(legend.position="none")
+
+A_movies %>% group_by(bechdel_binary) %>% summarize(means = mean(imdb_rating)) %>%summarize(`mean_difference:` = diff(means)) %>% glimpse()
+
+random_test1 <- vector()
+for (i in 1:5000) {
+ B_movies <- data.frame(imdb_rating = sample(A_movies$imdb_rating), bechdel_binary = A_movies$bechdel_binary)
+  random_test1[i] <- mean( B_movies[B_movies$bechdel_binary == FALSE, ]$imdb_rating) - mean(B_movies[B_movies$bechdel_binary == TRUE, ]$imdb_rating)
+}
+
+
+mean(random_test1 >  -0.2866561| random_test1 < 0.2866561) #pvalue: fail to reject H0!
+
+{hist(random_test1,main="",ylab=""); abline(v = c(0.2866561,-0.2866561),col="red")}
+```
+
+# Linear Regression Model
+### Moving forward with our analysis we will created a linear regression model predicting imdb_rating from runtime and bechdel_binary (with interactions). Before this however we mean center the runtime as a runtime of 0 is illogical given the fact that these are feature length films. From the model, the predicted imdb_rating for *films that are not bechdel films* with an average runtime is 6.77926. For films with average runtime, bechdel films have an average/predicted imdb_rating that is 0.256084 lower than non-bechdel films. To check the linearity, normality, and homoskedasticity of our data we check it graphically by plotting our residuals against our fitted values. From the graph it appears that linearity and homoskedacity are good, but from checking normality through the ks.test it appaears that we must reject the null hypothesis that the true distribution is normal, as the p-value is less than 0.05 (indicating significance). Next, we will compute recompute regression results with robust standard errors via coeftest(..., vcov=vcovHC(...)). From comparing the results of this function with that of the original model, it can be seen that all values are the same except for the significance levels. Thus the interpretations of each coefficient estimate still hold true. Speaking more to the significance of each coefficient it appears that the p-values for bechdel_binaryFALSE, bechdel_binaryTRUE, and runtime_c are still less than 0.05 — though the p-value for bechdel_binaryTRUE has increased, while the values for bechdel_binaryTRUE and runtime_c both decreased. For the original model and the recomputed model, the bechdel_binaryTRUE:runtime_c estimate is insignificant (a p-value of 0.14~ for both). 0.128751 is the proportion of the variation in the outcome explained by the model.
+```{R}
+library(sandwich)
+library(lmtest)
+#page 200 and 216
+
+A_movies$runtime_c <- A_movies$runtime - mean(A_movies$runtime)
+fit3 <-lm(imdb_rating ~ bechdel_binary*runtime_c,data=A_movies)
+summary(fit3)
+
+
+ggplot(A_movies, aes(runtime_c,imdb_rating, color = bechdel_binary)) + geom_smooth(method = "lm", se = F, fullrange = T) + geom_point()+geom_vline(xintercept=0,lty=2)
+## What proportion of the variation in the outcome does your model explain? (4)
+summary(fit3)$r.sq
+
+#### linearity check ## PG 228!!!!!!!!!
+
+resids3<-fit3$residuals; fitvals3<-fit3$fitted.values
+ggplot()+geom_point(aes(fitvals3,resids3))+geom_hline(yintercept=0, col="red")
+bptest(fit3)
+ks.test(resids3, "pnorm", sd=sd(resids3))
+coeftest(fit3, vcov = vcovHC(fit3))
+
+
+```
+
+# Linear Regression with Bootstraps
+### Next, we reran the same previous regression with bootstraps. This specific model was reran with bootstrapped standard errors by resampling with residuals. By doing this we assume that the original model is correctly specified. As such, we will compare SEs for both to see if there are big differences. Comparing the original standard errors, robust errors, and boostrapped errors it appears they are all relatively the same — speaking more thoroughly however the bootstrapped errors for (Intercept), bechdel_binaryTRUE, runtime_c, and bechdel_binaryTRUE:runtime_c are, respectively, higher than the normal and robust, lower than robust, lower than normal, and higher than the normal and robust.
+```{R}
+## Page 229
+
+fit3 <-lm(imdb_rating ~ bechdel_binary*runtime_c,data=A_movies)
+
+  resids3<-fit3$residuals #save residuals
+  fitted3<-fit3$fitted.values #save yhats
+  resid_resamp<-replicate(5000,{
+    new_resids<-sample(resids3,replace=TRUE) #resample resids w/ replacement
+    A_movies$new_y<-fitted3+new_resids #add new resids to yhats to get new "data"
+    fit_a<-lm(new_y~bechdel_binary*runtime_c,data=A_movies) #refit model
+    coef(fit_a) #save coefficient estimates (b0, b1, etc)
+})
+# standard deviation (the 0s)
+
+resid_resamp%>%t%>%as.data.frame%>%summarize_all(sd)
+
+#Resampling residuals assumes that the original model is correctly specified! Good idea to compare SEs for both to see if there are big differences!
+#If there are, always best to go with more conservative (larger) estimates
+
+#COMPARISON
+ coeftest(fit3)[,1:2] #NORMAL
+ coeftest(fit3, vcov=vcovHC(fit3))[,1:2] #ROBUST SES
+
+```
+
+# Logistic Regression Model
+### For my next analysis I will predict the bechdel_binary variable from the rated and genre5 variables. From the glmtest we can see that the predicted odds for a film to be a bechdel film when all MPA ratings and genres = 0 is 0.28811. In examining the rating coefficients, it can be seen that when all other ratings (except the one being mentioned) and genres are held constant going up 1 rated.L multiplies odds by a factor of 2.69700, going up 1 rated.Q multiplies odds by a factor of 0.62403, going up 1 rated.C multiplies odds by a factor of 1.52307, and going up 1 rated^4 multiplies odds by a factor of 1.22311. Analyzing the genre coefficients, it can be seen that when all other genres (except the one being mentioned) and ratings are held constant going up 1 genreComedy multiplies odds by a factor of 2.55347, going up 1 genreDrama multiplies odds by a factor of 2.03780, going up 1 genreHorror/Thriller multiplies odds by a factor of 2.88037, and going up 1 genreOther multiplies odds by a factor of 5.39916. Next, we created a confusion matrix to find the Sensitivity (the true positive rate (TPR)), Specificity (the true negative rate (TNR)), Precision (PPV), and the AUC (area under the curve). The sensitivity for this dataset is the probability of detecting a movie as being bechdel if it really is, and for that the probability is 60/326 = 0.1840491. The specificity for this dataset is the probability of falsely detecting a movie as being non-bechdel for an actual bechdel film, and for that the probability is 473/515 =  0.9184466. The PPV for this dataset is the probability of the proportion of those classified as bechdel who actually are, and for that the probability is 60/102 =  0.5882353. When finding the AUC (a value that quantifies how well we are predicting overall) we first create a ROC plot and apply the calc_auc; from this we can see that our AUC is rather poor as it is 0.6236405 (excellent to good AUCs have values of 0.9 - 1.0). As such, we can conclude that our model has poor discrimination between bechdel and non-bechdel films (these conclusions are also supported by the logit density plot).
+```{R}
+glmfit<-glm(bechdel_binary~rated+genre5,data=A_movies,family="binomial")
+coeftest(glmfit)
+ #log-odds scale coefs (additive)
+coef(glmfit)%>%round(5)%>%data.frame
+ #odds scale coefs (multiplicative)
+coef(glmfit)%>%exp%>%round(5)%>%data.frame
+
+#confusion matrix
+prob<-predict(glmfit,type="response") #save predicted probabilities
+pred<-ifelse(prob>.5,TRUE,FALSE)
+table(prediction=pred, truth=A_movies$bechdel_binary) %>% addmargins
+
+# G, PG, PG-13, R, NC-17
+
+
+60/326 # TPR 
+473/515 # TNR
+60/102 # PPV
+# calculation of AUC (as stated to do in points 3 and 5 of instruction #6) and creation of ROC plot
+library(plotROC)
+ROCplot<-ggplot(A_movies)+geom_roc(aes(d=bechdel_binary,m=prob), n.cuts=0)+geom_segment(aes(x=0,xend=1,y=0,yend=1),lty=2)
+ROCplot
+calc_auc(ROCplot)
+
+# logit plot
+A_movies$logit<-predict(glmfit,type="link")
+A_movies%>%ggplot(aes(logit,color=bechdel_binary,fill=bechdel_binary))+geom_density(alpha=.4)+
+  theme(legend.position=c(.85,.85))+geom_vline(xintercept=0)+xlab("predictor (logit)")
+
+
+```
+
+
+
+```{r global_options, include=FALSE}
+#LEAVE THIS CHUNK ALONE!
+library(knitr)
+opts_chunk$set(fig.align="center", fig.height=5, message=FALSE, warning=FALSE, fig.width=8, tidy.opts=list(width.cutoff=60),tidy=TRUE)
+
+#HERE'S THE CLASSIFICAITON DIAGNOSTICS FUNCTION
+class_diag<-function(probs,truth){
+  tab<-table(factor(probs>.5,levels=c("FALSE","TRUE")),truth)
+  acc=sum(diag(tab))/sum(tab)
+  sens=tab[2,2]/colSums(tab)[2]
+  spec=tab[1,1]/colSums(tab)[1]
+  ppv=tab[2,2]/rowSums(tab)[2]
+  f1=2*(sens*ppv)/(sens+ppv)
+
+  if(is.numeric(truth)==FALSE & is.logical(truth)==FALSE){
+    truth<-as.numeric(truth)-1}
+  
+  #CALCULATE EXACT AUC
+  ord<-order(probs, decreasing=TRUE)
+  probs <- probs[ord]; truth <- truth[ord]
+  
+  TPR=cumsum(truth)/max(1,sum(truth)) 
+  FPR=cumsum(!truth)/max(1,sum(!truth))
+  
+  dup<-c(probs[-1]>=probs[-length(probs)], FALSE)
+  TPR<-c(0,TPR[!dup],1); FPR<-c(0,FPR[!dup],1)
+  
+  n <- length(TPR)
+  auc<- sum( ((TPR[-1]+TPR[-n])/2) * (FPR[-1]-FPR[-n]) )
+
+  data.frame(acc,sens,spec,ppv,f1,auc)
+}
+```
+
+
+# More Logistic Regression
+### For the final analysis we will now perform the same logistic regression from before but now with *the rest of our variables* (still attempting to predict bechdel). After creating a confusion matrix for this model we were able calculate and interpret in-sample classification diagnostics. The sensitivity for this dataset is the probability of detecting a movie as being bechdel if it really is, and for that the probability is 106/326 = 0.3251534. The specificity for this dataset is the probability of falsely detecting a movie as being non-bechdel for an actual bechdel film, and for that the probability is 445/515 =  0.8640777. The PPV for this dataset is the probability of the proportion of those classified as bechdel who actually are, and for that the probability is 106/176 =  0.6022727. Analyzation of our AUC shows it to be rather poor again as it is 0.6682113, but it is still higher than the previous model (which had an AUC of 0.6236405). As such, we can conclude that our model still has poor discrimination between bechdel and non-bechdel films. To cross-validate this model we performed a 10-fold CV. The out-of-sample classification diagnostics are TPR = 0.3227747, TNR = 0.8652623, PPV = 0.5953069, and AUC = 0.6670056 Comparing these values with the in-sample metrics it can be seen that half of all classification diagnostics decreased in the 10-fold CV (AUC and TPR), while the other half increased (PPV and TNR). In further examining the AUC of the 10-fold we find that it is still poor (indicating poor discrimination in our model), and even worse at discrimination than the original model (as can be concluded through its lower AUC). Thus our next step is to perform LASSO on our same models — LASSO penalizes a model for becoming more complex, thus it reduces overfitting, enhances prediction accuracy, and creates more interpretable models. After running LASSO on our model we can see that the *most* predictive variables are imdb_rating, genre, budget, and "rated.Q" (as these were all kept). Given that a majority of the other rated groups were excluded during LASSO, and the lack of distinction about what rating (G,PG,PG-13,R,NC-17) "rated.Q" was, I decided to exclude the entire rated variable from the following 10-fold CV. From this CV we can see that the out-of-sample classification diagnostics are TPR = 0.2486394, TNR = 0.8697843, PPV = 0.5447623, and AUC = 0.6577645. Comparing the LASSO 10-fold CV's AUC with the previous models' AUCs, it can be concluded that this is the worst model at predicting bechdel_binary as it has the lowest AUC value of all models (0.6577645). Further comparison of the classification diagnositcs between models shows that the LASSO 10-fold CV has the worst TPR and PPV (as they are the lowest TPR and PPV probability values between all models), and the highest TNR of all (although all models' TNRs are relatively the same as they all hover around 0.86~).
+```{R}
+library(tidyverse);library(lmtest)
+glmfit2<-glm(bechdel_binary~imdb_rating+genre5+runtime+budget+rated,data=A_movies,family="binomial")
+coeftest(glmfit2)
+
+#confusion matrix
+prob2<-predict(glmfit2,type="response") #save predicted probabilities
+pred2<-ifelse(prob2>.5,TRUE,FALSE)
+table(prediction=pred2, truth=A_movies$bechdel_binary) %>% addmargins
+
+
+# CALCULATION OF TPR AND ALL THAT IS PAGE 284
+106/326 # TPR 
+445/515 # TNR
+106/176 # PPV
+#ROC PLOT AND AUC
+ROCplot2<-ggplot(A_movies)+geom_roc(aes(d=bechdel_binary,m=prob2), n.cuts=0)+geom_segment(aes(x=0,xend=1,y=0,yend=1),lty=2)
+calc_auc(ROCplot2)
+
+# 10 fold pg 337
+set.seed(1234)
+k=10
+data<-A_movies[sample(nrow(A_movies)),] 
+folds<-cut(seq(1:nrow(A_movies)),breaks=k,labels=F) 
+diags<-NULL
+for(i in 1:k){
+  ## Create training and test sets
+  train<-data[folds!=i,]
+  test<-data[folds==i,]
+  truth<-test$bechdel_binary ## Truth labels for fold i
+  ## Train model on training set (all but fold i)
+  ## Test model on test set (fold i)
+  probs_10<-predict(glmfit2,newdata = test,type="response")
+  ## Get diagnostics for fold i
+  diags<-rbind(diags,class_diag(probs_10,truth))
+}
+
+summarize_all(diags, mean)
+
+# LASSO 
+library(glmnet)
+A_matrix <- as.matrix(A_movies$bechdel_binary)
+movie_preds <-model.matrix(bechdel_binary~imdb_rating+genre5+runtime+budget+rated,data=A_movies)[,-1]
+
+movie_cv <- cv.glmnet(movie_preds, A_matrix, family="binomial")
+lasso_fit <- glmnet(movie_preds, A_matrix, family = "binomial", lambda = movie_cv$lambda.1se)
+coef(lasso_fit)
+
+
+# 10 fold on LASSO page 374
+set.seed(1234)
+k=10
+
+data2 <- movies %>% sample_frac #put rows of dataset in random order
+folds2 <- ntile(1:nrow(data2),n=10) #create fold labels
+diags2<-NULL
+for(i in 1:k){
+  ## Create training and test sets
+  train2<-data2[folds2!=i,]
+  test2<-data2[folds2==i,]
+  truth2<-test2$bechdel_binary ## Truth labels for fold i
+glmfit2<-glm(bechdel_binary~imdb_rating+genre5+budget,data=A_movies,family="binomial")
+probably <- predict(glmfit2, newdata=test2, type="response")
+  ## Get diagnostics for fold i
+  diags2<-rbind(diags2,class_diag(probably,truth2))
+}
+
+diags2%>%summarize_all(mean)
+
+```
+
+# Conclusion
+## After analyzing the *movies* dataset through various models, it is clear that it is difficult to predict numerous response variables (such as bechdel_binary and imdb_rating) by simply examining the other response and explanatory variables that I had chosen. Although this conclusion may have been reached earlier given the numerous assumption violations, the execution of these various tests and regression models proved useful in solidifying my own understanding of the various statistical concepts taught during class. Despite the failings of my tests and models on various predictions, it must be noted that I only utilized a handful of the variables provided by the dataset. As such, possible future studies on this dataset may consider analyzing all provided variables.

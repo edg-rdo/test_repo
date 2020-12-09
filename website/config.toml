@@ -1,0 +1,48 @@
+baseurl = "/"
+languageCode = "en-US"
+title = "Ed Montemayor"
+# Enable comments by entering your Disqus shortname
+disqusShortname = ""
+# Enable Google Analytics by entering your tracking code
+googleAnalytics = ""
+theme = "hugo-sustain"
+
+[permalinks]
+  post = "/post/:year/:month/:day/:slug"
+
+[params]
+  avatar = "softboi.PNG"
+  author = "Ed Montemayor"
+  occupation = "UT Student"
+  about = "Ed Montemayor is an upstanding young man who has upheld the letter of the law to the fullest extent of his abilities. He passed through his school years and through college without any evidence of criminal wrongdoings being attached to him, indeed becoming a role model and a guiltless beacon of hope to his peer group, members of whom might have otherwise been terribly misled. Ed has worked as an Activity Supervisor at Gregory Gym, supervising various activities. You should definitely hire him."
+
+  # Custom assets can be linked with their paths relative to static/
+  custom_css = []
+  custom_js  = []
+
+[params.social]
+  Github        = "edg-rdo"
+  Email         = "emmontemayor@utexas.edu"
+#  Twitter       = "username"
+# LinkedIn      = "username"
+  Instagram     = "edg.rdo"
+#  Stackoverflow = "username"
+#  Medium        = "username"
+#  Telegram      = "username"
+
+## Main Menu
+[[menu.main]]
+  name = "blog"
+  weight = 100
+  identifier = "blog"
+  url = "/post/"
+[[menu.main]]
+  name = "projects"
+  identifier = "projects"
+  weight = 200
+  url = "/projects/"
+[[menu.main]]
+  name = "resume"
+  identifier = "resume"
+  weight = 300
+  url = "/resume/"

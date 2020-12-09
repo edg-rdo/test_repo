@@ -1,0 +1,82 @@
+---
+title: Here is the Blog Post for Project 3
+author: ''
+date: '2020-12-05'
+slug: here-is-the-blog-post-for-project-3
+categories: []
+tags: []
+description: ''
+---
+
+Howdy,
+
+Here's how Python and R interact.
+
+```{r}
+print("here we go")
+#here is a regular R markdown chunk
+eh <- "ok"
+```
+
+```{R}
+
+# R CHUNK
+library(reticulate)
+
+```
+
+```{python}
+#PYTHON CHUNK
+x = "he"
+print(r.eh,x)
+
+```
+
+```{R}
+#R CHUNK
+cat(c(eh,py$x))
+
+```
+
+```{python}
+#python
+import numpy as np
+matx=np.array([[1,2],[3,4]])
+```
+```{R}
+# r
+maty<-solve(py$matx)
+maty
+```
+
+```{python}
+#python
+np.dot(matx,r.maty).round()
+```
+
+### Here are python examples from the second to last homework in a python chunk
+```{python}
+
+import pandas as pd
+quakes=pd.read_csv("https://vincentarelbundock.github.io/Rdatasets/csv/datasets/quakes.csv",index_col=0)
+
+quakes.shape
+#There are 1000 observations of each variable, and there are 5 variables in total.
+np.median(quakes[quakes.long>175].mag)
+#the median magnitude for quakes whose longitude is greater than 175. 
+
+np.median(quakes.depth)
+np.std(quakes[quakes.depth>247].lat,ddof=1)
+np.std(quakes[quakes.depth<247].lat,ddof=1)
+
+```
+The standard deviation of the variable lat when depth is greater than the median depth is 3.577252 and the standard deviation of the variable lat when depth is less than the median depth is 6.1501. This suggests that earthquakes at lower depths vary much more in latitudinal coordinates.
+
+###Here's a pic of a wooden van I decked out in Forza: 
+![](/post/2020-12-05-here-is-the-blog-post-for-project-3_files/IMG_3382.JPG){width=300px height=300px}
+
+[Link to Project 1](https://edg-rdo.github.io/project/project1/)
+
+[Link to Google](https://www.google.com)
+
+[Follow my Spotify](https://open.spotify.com/user/edg.rdo?si=jjJzWjTRRp-DmDehf5KItA)

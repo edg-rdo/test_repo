@@ -1,0 +1,84 @@
+---
+title: Here is the Blog Post for Project 3
+author: ''
+date: '2020-12-05'
+slug: here-is-the-blog-post-for-project-3
+categories: []
+tags: []
+description: ''
+---
+
+<link href="/rmarkdown-libs/anchor-sections/anchor-sections.css" rel="stylesheet" />
+<script src="/rmarkdown-libs/anchor-sections/anchor-sections.js"></script>
+
+
+<p>Howdy,</p>
+<p>Here's how Python and R interact.</p>
+<pre class="r"><code>#here is a regular R markdown chunk
+print(&quot;here we go&quot;)</code></pre>
+<pre><code>## [1] &quot;here we go&quot;</code></pre>
+<pre class="r"><code>eh &lt;- &quot;ok&quot;</code></pre>
+<pre class="r"><code># R CHUNK
+names(knitr::knit_engines$get())</code></pre>
+<pre><code>##  [1] &quot;awk&quot;         &quot;bash&quot;        &quot;coffee&quot;      &quot;gawk&quot;        &quot;groovy&quot;     
+##  [6] &quot;haskell&quot;     &quot;lein&quot;        &quot;mysql&quot;       &quot;node&quot;        &quot;octave&quot;     
+## [11] &quot;perl&quot;        &quot;psql&quot;        &quot;Rscript&quot;     &quot;ruby&quot;        &quot;sas&quot;        
+## [16] &quot;scala&quot;       &quot;sed&quot;         &quot;sh&quot;          &quot;stata&quot;       &quot;zsh&quot;        
+## [21] &quot;highlight&quot;   &quot;Rcpp&quot;        &quot;tikz&quot;        &quot;dot&quot;         &quot;c&quot;          
+## [26] &quot;cc&quot;          &quot;fortran&quot;     &quot;fortran95&quot;   &quot;asy&quot;         &quot;cat&quot;        
+## [31] &quot;asis&quot;        &quot;stan&quot;        &quot;block&quot;       &quot;block2&quot;      &quot;js&quot;         
+## [36] &quot;css&quot;         &quot;sql&quot;         &quot;go&quot;          &quot;python&quot;      &quot;julia&quot;      
+## [41] &quot;sass&quot;        &quot;scss&quot;        &quot;theorem&quot;     &quot;lemma&quot;       &quot;corollary&quot;  
+## [46] &quot;proposition&quot; &quot;conjecture&quot;  &quot;definition&quot;  &quot;example&quot;     &quot;exercise&quot;   
+## [51] &quot;proof&quot;       &quot;remark&quot;      &quot;solution&quot;</code></pre>
+<pre class="r"><code>library(reticulate)</code></pre>
+<pre class="python"><code>#PYTHON CHUNK
+x = &quot;he&quot;
+print(r.eh,x)</code></pre>
+<pre><code>## ok he</code></pre>
+<pre class="r"><code>#R CHUNK
+cat(c(eh,py$x))</code></pre>
+<pre><code>## ok he</code></pre>
+<pre class="python"><code>#python
+import numpy as np
+matx=np.array([[1,2],[3,4]])</code></pre>
+<pre class="r"><code># r
+maty&lt;-solve(py$matx)
+maty</code></pre>
+<pre><code>##      [,1] [,2]
+## [1,] -2.0  1.0
+## [2,]  1.5 -0.5</code></pre>
+<pre class="python"><code>#python
+np.dot(matx,r.maty).round()</code></pre>
+<pre><code>## array([[ 1.,  0.],
+##        [ 0.,  1.]])</code></pre>
+<div id="here-are-python-examples-from-the-second-to-last-homework-in-a-python-chunk" class="section level3">
+<h3>Here are python examples from the second to last homework in a python chunk</h3>
+<pre class="python"><code>
+import pandas as pd
+quakes=pd.read_csv(&quot;https://vincentarelbundock.github.io/Rdatasets/csv/datasets/quakes.csv&quot;,index_col=0)
+
+quakes.shape
+#There are 1000 observations of each variable, and there are 5 variables in total.</code></pre>
+<pre><code>## (1000, 5)</code></pre>
+<pre class="python"><code>np.median(quakes[quakes.long&gt;175].mag)
+#the median magnitude for quakes whose longitude is greater than 175. </code></pre>
+<pre><code>## 4.5</code></pre>
+<pre class="python"><code>np.median(quakes.depth)</code></pre>
+<pre><code>## 247.0</code></pre>
+<pre class="python"><code>np.std(quakes[quakes.depth&gt;247].lat,ddof=1)</code></pre>
+<pre><code>## 3.577252109778374</code></pre>
+<pre class="python"><code>np.std(quakes[quakes.depth&lt;247].lat,ddof=1)</code></pre>
+<pre><code>## 6.1500996392534564</code></pre>
+<p>The standard deviation of the variable lat when depth is greater than the median depth is 3.577252 and the standard deviation of the variable lat when depth is less than the median depth is 6.1501. This suggests that earthquakes at lower depths vary much more in latitudinal coordinates.</p>
+</div>
+<div id="heres-a-pic-of-a-wooden-van-i-decked-out-in-forza" class="section level3">
+<h3>Here's a pic of a wooden van I decked out in Forza:</h3>
+<div class="figure">
+<img src="/post/2020-12-05-here-is-the-blog-post-for-project-3_files/IMG_3382.JPG" width="300" height="300" />
+
+</div>
+<p><a href="https://edg-rdo.github.io/project/project1/">Link to Project 1</a></p>
+<p><a href="https://www.google.com">Link to Google</a></p>
+<p><a href="https://open.spotify.com/user/edg.rdo?si=jjJzWjTRRp-DmDehf5KItA">Follow my Spotify</a></p>
+</div>

@@ -1,0 +1,291 @@
+---
+title: Project 1
+author: Ed Montemayor emm3945
+date: 10/6/2020
+output: html_document
+---
+
+<link href="/rmarkdown-libs/anchor-sections/anchor-sections.css" rel="stylesheet" />
+<script src="/rmarkdown-libs/anchor-sections/anchor-sections.js"></script>
+
+
+<div id="introduction" class="section level1">
+<h1>Introduction</h1>
+<div id="i-have-chosen-the-uscancerrates-dataset-for-my-project-this-data-set-records-the-annual-rates-of-death-1999-2003-due-to-cancer-by-sex-in-us-counties.-these-observations-were-taken-from-the-public-reports-of-the-national-vital-statistics-system-which-were-in-turn-provided-by-hospitals-around-the-country.-this-dataset-contains-the-rate-of-death-per-100000-due-to-cancer-among-males-and-females-the-95-lower-and-upper-confidence-limit-for-each-sexs-rate-of-death-and-the-state-and-county-for-each-observation.-this-dataset-is-interesting-to-me-because-i-am-interested-in-medicine-and-public-health.-i-have-no-prior-expectations-for-any-trends-or-correlations-as-healthcare-around-the-us-is-generally-standardized-and-cancer-is-an-unpredictable-disease-in-regards-to-its-affect-and-fatality." class="section level3">
+<h3>I have chosen the USCancerRates dataset for my project; this data set records the annual rates of death (1999-2003) due to cancer by sex in US counties. These observations were taken from the public reports of the National Vital Statistics System, which were in turn provided by hospitals around the country. This dataset contains the rate of death per 100,000 due to cancer among males and females, the 95% lower and upper confidence limit for each sex's rate of death, and the state and county for each observation. This dataset is interesting to me because I am interested in medicine and public health. I have no prior expectations for any trends or correlations, as healthcare around the US is generally standardized and cancer is an unpredictable disease (in regards to its affect and fatality).</h3>
+</div>
+<div id="first-we-load-the-desired-dataset-from-latticeextra-specifically-the-dataset-uscancerrates.-next-we-separate-the-dataset-into-two-separate-sets-by-piping-the-original-dataset-through-the-select-function-specifying-that-the-title-variable-is-available-in-both-new-sets.-it-should-be-noted-that-the-separation-of-the-dataset-was-made-at-a-random-column." class="section level3">
+<h3>First, we load the desired dataset from latticeExtra — specifically the dataset, <em>USCancerRates</em>. Next, we separate the dataset into two separate sets by piping the original dataset through the <em>select</em> function — specifying that the <em>title</em> variable is available in both new sets. It should be noted that the separation of the dataset was made at a random column.</h3>
+<pre class="r"><code>library(tidyverse)
+library(dplyr)
+library(latticeExtra)
+library(data.table)
+library(tidyr)
+cancer &lt;- USCancerRates
+cancer_1 &lt;- cancer %&gt;% select(county, state, 1:4)
+cancer_2 &lt;- cancer %&gt;% select(county, 5:7)</code></pre>
+</div>
+<div id="next-we-rejoin-the-datasets-again-through-the-shared-county-variable-this-is-achieved-by-using-the-left_join-function.-i-chose-the-join-for-no-specific-reason-i-just-needed-to-recombine-the-dataset-again-as-such-no-cases-were-dropped-also-meaning-that-there-are-no-potential-issues.-to-check-that-all-columns-and-rows-match-we-use-all_equal-on-the-original-dataset-and-the-newly-combined-one." class="section level3">
+<h3>Next, we <em>rejoin</em> the datasets again through the shared <em>county</em> variable; this is achieved by using the <em>left_join</em> function. I chose the join for no specific reason, I just needed to recombine the dataset again — as such, no cases were dropped (also meaning that there are no potential issues). To check that all columns and rows match we use <em>all_equal</em> on the original dataset and the newly combined one.</h3>
+<pre class="r"><code>combined_cancer_data &lt;- left_join(cancer_1, cancer_2)
+all_equal(cancer, combined_cancer_data)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+</div>
+<div id="next-i-untidied-the-dataset-to-see-if-it-could-yield-more-in-depth-analysis.-as-such-i-chose-the-male-death-rate-for-each-state-and-placed-those-in-new-columns-for-each-state.-upon-comparing-these-new-dataset-with-the-original-it-clear-the-original-dataset-was-much-more-intuitive-for-analyzation-and-so-there-is-no-need-to-utilize-the-untidy-version-of-my-dataset." class="section level3">
+<h3>Next, I <em>untidied</em> the dataset to see if it could yield more in-depth analysis. As such, I chose the male death rate for each state and placed those in new columns for each state. Upon comparing these new dataset with the original, it clear the original dataset was much more intuitive for analyzation, and so there is no need to utilize the untidy version of my dataset.</h3>
+<pre class="r"><code>untidied_cancer &lt;- combined_cancer_data %&gt;% pivot_wider(names_from = &quot;state&quot;, 
+    values_from = &quot;rate.male&quot;)</code></pre>
+</div>
+<div id="in-viewing-the-dataset-i-noticed-a-single-county-outlier-that-was-far-from-all-other-observations.-to-see-if-how-much-this-would-affect-my-analysis-i-decided-to-filter-it-out.-a-vast-majority-of-the-death-rates-for-each-county-are-above-100-and-so-i-presumed-that-running-summary-functions-on-a-filtered-version-of-the-dataset-would-not-affect-the-results-much.-in-comparing-the-summaries-for-both-the-filtered-and-original-it-is-clear-that-this-postulation-holds-true.-be-that-as-it-may-we-will-continue-to-utilize-the-orignal-data-as-removing-observations-unneccesarily-is-not-good-analyzational-practice.-in-general-the-mean-death-rate-for-males-in-the-country-is-about-257-and-about-169-for-females.-this-indicates-that-the-disease-may-be-more-fatal-to-males-in-the-country." class="section level3">
+<h3>In viewing the dataset I noticed a single county outlier that was far from all other observations. To see if how much this would affect my analysis I decided to <em>filter</em> it out. A vast majority of the death rates for each county are above 100, and so I presumed that running summary functions on a <em>filtered</em> version of the dataset would not affect the results much. In comparing the summaries for both the filtered and original it is clear that this postulation holds true. Be that as it may, we will continue to utilize the orignal data as removing observations unneccesarily is not good analyzational practice. In general, the mean death rate for males in the country is about 257, and about 169 for females. This indicates that the disease may be more fatal to males in the country.</h3>
+</div>
+<div id="in-running-further-summary-statistics-grouping-by-state-then-county-then-by-both-some-results-are-clear.-on-average-mississippi-and-louisiana-hold-the-highest-male-death-despite-both-not-having-the-largest-amount-of-counties.-by-state-the-highest-male-death-rate-goes-to-florida-with-629-and-the-highest-female-death-rate-goes-to-wymoing-with-303.-in-comparing-these-values-with-the-other-ones-seen-throughout-the-table-one-can-assume-that-there-is-higher-variability-in-cancers-affects-on-males.-moreover-the-overall-average-death-rate-for-females-is-generally-the-same-across-all-states.-examining-the-average-death-rate-for-each-county-it-is-clear-that-most-death-rates-hover-around-the-200---300-range.-from-this-we-can-conclude-that-cancer-does-not-have-more-discernable-effects-on-individuals-regardless-of-state-or-county." class="section level3">
+<h3>In running further summary statistics, grouping by state, then county, then by both, some results are clear. On average, Mississippi and Louisiana hold the highest male death, despite both not having the largest amount of counties. By state the highest male death rate goes to Florida, with 629, and the highest female death rate goes to Wymoing, with 303. In comparing these values with the other ones seen throughout the table, one can assume that there is higher variability in cancer's affects on males. Moreover, the overall average death rate for females is generally the same across all states. Examining the average death rate for each county, it is clear that most death rates hover around the 200 - 300 range. From this we can conclude that cancer does not have more discernable effects on individuals regardless of state or county.</h3>
+<pre class="r"><code>cancer_filtered &lt;- cancer %&gt;% filter(rate.male &gt; 80)
+glimpse(cancer_filtered)</code></pre>
+<pre><code>## Rows: 3,030
+## Columns: 8
+## $ rate.male    &lt;dbl&gt; 363.7, 345.7, 340.7, 335.9, 330.1, 328.1, 327.9, 327.4, …
+## $ LCL95.male   &lt;dbl&gt; 311.1, 274.2, 304.5, 288.9, 293.4, 255.9, 261.4, 299.1, …
+## $ UCL95.male   &lt;dbl&gt; 423.2, 431.4, 380.9, 389.1, 370.6, 416.6, 408.0, 358.2, …
+## $ rate.female  &lt;dbl&gt; 151.0, 140.5, 182.3, 185.3, 172.0, 124.1, 174.2, 157.7, …
+## $ LCL95.female &lt;dbl&gt; 123.6, 102.8, 161.3, 157.2, 151.4, 88.5, 133.3, 142.1, 1…
+## $ UCL95.female &lt;dbl&gt; 183.6, 189.7, 205.5, 217.5, 195.0, 171.7, 225.4, 174.8, …
+## $ state        &lt;fct&gt; Alabama, Alabama, Alabama, Alabama, Alabama, Alabama, Al…
+## $ county       &lt;I&lt;chr&gt;&gt; Pickens County, Bullock County, Russell County, Barbo…</code></pre>
+<pre class="r"><code>cancer_filtered %&gt;% summarize(n_distinct(county), mean(rate.male, 
+    na.rm = T), mean(rate.female, na.rm = T), mean(LCL95.male, 
+    na.rm = T), mean(LCL95.female, na.rm = T), sd(rate.male, 
+    na.rm = T), sd(rate.female, na.rm = T), sd(LCL95.male, na.rm = T), 
+    sd(LCL95.female, na.rm = T), max(rate.male), max(rate.female), 
+    max(LCL95.male), max(LCL95.female), min(rate.male), min(rate.female), 
+    min(LCL95.male), min(LCL95.female))</code></pre>
+<pre><code>##   n_distinct(county) mean(rate.male, na.rm = T) mean(rate.female, na.rm = T)
+## 1               1809                   257.4549                     164.9299
+##   mean(LCL95.male, na.rm = T) mean(LCL95.female, na.rm = T)
+## 1                    215.2345                      136.4906
+##   sd(rate.male, na.rm = T) sd(rate.female, na.rm = T) sd(LCL95.male, na.rm = T)
+## 1                 44.24763                   23.48891                  44.01662
+##   sd(LCL95.female, na.rm = T) max(rate.male) max(rate.female) max(LCL95.male)
+## 1                    25.72184          629.1               NA           528.8
+##   max(LCL95.female) min(rate.male) min(rate.female) min(LCL95.male)
+## 1                NA            108               NA            66.9
+##   min(LCL95.female)
+## 1                NA</code></pre>
+<pre class="r"><code>cancer %&gt;% summarize(n_distinct(county), mean(rate.male, na.rm = T), 
+    mean(rate.female, na.rm = T), mean(LCL95.male, na.rm = T), 
+    mean(LCL95.female, na.rm = T), sd(rate.male, na.rm = T), 
+    sd(rate.female, na.rm = T), sd(LCL95.male, na.rm = T), sd(LCL95.female, 
+        na.rm = T), max(rate.male), max(rate.female), max(LCL95.male), 
+    max(LCL95.female), min(rate.male), min(rate.female), min(LCL95.male), 
+    min(LCL95.female))</code></pre>
+<pre><code>##   n_distinct(county) mean(rate.male, na.rm = T) mean(rate.female, na.rm = T)
+## 1               1815                   257.3952                      164.964
+##   mean(LCL95.male, na.rm = T) mean(LCL95.female, na.rm = T)
+## 1                    215.1749                      136.3513
+##   sd(rate.male, na.rm = T) sd(rate.female, na.rm = T) sd(LCL95.male, na.rm = T)
+## 1                 44.36225                   23.56829                  44.13149
+##   sd(LCL95.female, na.rm = T) max(rate.male) max(rate.female) max(LCL95.male)
+## 1                    25.80417             NA               NA              NA
+##   max(LCL95.female) min(rate.male) min(rate.female) min(LCL95.male)
+## 1                NA             NA               NA              NA
+##   min(LCL95.female)
+## 1                NA</code></pre>
+<pre class="r"><code>cancer %&gt;% group_by(state) %&gt;% summarize(n_distinct(county), 
+    mean(rate.male, na.rm = T), mean(rate.female, na.rm = T), 
+    mean(LCL95.male, na.rm = T), mean(LCL95.female, na.rm = T), 
+    sd(rate.male, na.rm = T), sd(rate.female, na.rm = T), sd(LCL95.male, 
+        na.rm = T), sd(LCL95.female, na.rm = T), max(rate.male), 
+    max(rate.female), max(LCL95.male), max(LCL95.female), min(rate.male), 
+    min(rate.female), min(LCL95.male), min(LCL95.female))</code></pre>
+<pre><code>## # A tibble: 49 x 18
+##    state `n_distinct(cou… `mean(rate.male… `mean(rate.fema… `mean(LCL95.mal…
+##    &lt;fct&gt;            &lt;int&gt;            &lt;dbl&gt;            &lt;dbl&gt;            &lt;dbl&gt;
+##  1 Alab…               67             288.             162.             249.
+##  2 Alas…               20             262.             183.             178.
+##  3 Ariz…               15             207.             144.             184.
+##  4 Arka…               75             288.             170.             242.
+##  5 Cali…               57             222.             161.             202.
+##  6 Colo…               56             204.             151.             154.
+##  7 Conn…                8             234              162              221.
+##  8 Dela…                4             270.             178.             256.
+##  9 Flor…               67             259.             162.             231.
+## 10 Geor…              157             287.             166.             233.
+## # … with 39 more rows, and 13 more variables: `mean(LCL95.female, na.rm =
+## #   T)` &lt;dbl&gt;, `sd(rate.male, na.rm = T)` &lt;dbl&gt;, `sd(rate.female, na.rm =
+## #   T)` &lt;dbl&gt;, `sd(LCL95.male, na.rm = T)` &lt;dbl&gt;, `sd(LCL95.female, na.rm =
+## #   T)` &lt;dbl&gt;, `max(rate.male)` &lt;dbl&gt;, `max(rate.female)` &lt;dbl&gt;,
+## #   `max(LCL95.male)` &lt;dbl&gt;, `max(LCL95.female)` &lt;dbl&gt;, `min(rate.male)` &lt;dbl&gt;,
+## #   `min(rate.female)` &lt;dbl&gt;, `min(LCL95.male)` &lt;dbl&gt;,
+## #   `min(LCL95.female)` &lt;dbl&gt;</code></pre>
+<pre class="r"><code>cancer %&gt;% group_by(county) %&gt;% summarize(n_distinct(state), 
+    mean(rate.male, na.rm = T), mean(rate.female, na.rm = T), 
+    mean(LCL95.male, na.rm = T), mean(LCL95.female, na.rm = T), 
+    sd(rate.male, na.rm = T), sd(rate.female, na.rm = T), sd(LCL95.male, 
+        na.rm = T), sd(LCL95.female, na.rm = T), max(rate.male), 
+    max(rate.female), max(LCL95.male), max(LCL95.female), min(rate.male), 
+    min(rate.female), min(LCL95.male), min(LCL95.female))</code></pre>
+<pre><code>## # A tibble: 1,815 x 18
+##    county `n_distinct(sta… `mean(rate.male… `mean(rate.fema… `mean(LCL95.mal…
+##    &lt;I&lt;ch&gt;            &lt;int&gt;            &lt;dbl&gt;            &lt;dbl&gt;            &lt;dbl&gt;
+##  1 Abbev…                1             246.             162.             208.
+##  2 Acadi…                1             308.             216.             276.
+##  3 Accom…                1             303.             198.             269.
+##  4 Ada C…                1             225.             158.             211.
+##  5 Adair…                4             262.             167.             214.
+##  6 Adams…               12             244.             163.             200.
+##  7 Addis…                1             232.             157.             198.
+##  8 Aiken…                1             292.             168.             273.
+##  9 Aitki…                1             207.             165.             171.
+## 10 Alach…                1             262.             166.             246.
+## # … with 1,805 more rows, and 13 more variables: `mean(LCL95.female, na.rm =
+## #   T)` &lt;dbl&gt;, `sd(rate.male, na.rm = T)` &lt;dbl&gt;, `sd(rate.female, na.rm =
+## #   T)` &lt;dbl&gt;, `sd(LCL95.male, na.rm = T)` &lt;dbl&gt;, `sd(LCL95.female, na.rm =
+## #   T)` &lt;dbl&gt;, `max(rate.male)` &lt;dbl&gt;, `max(rate.female)` &lt;dbl&gt;,
+## #   `max(LCL95.male)` &lt;dbl&gt;, `max(LCL95.female)` &lt;dbl&gt;, `min(rate.male)` &lt;dbl&gt;,
+## #   `min(rate.female)` &lt;dbl&gt;, `min(LCL95.male)` &lt;dbl&gt;,
+## #   `min(LCL95.female)` &lt;dbl&gt;</code></pre>
+<pre class="r"><code>cancer %&gt;% group_by(state, county) %&gt;% summarize(mean(rate.male, 
+    na.rm = T), mean(rate.female, na.rm = T), mean(LCL95.male, 
+    na.rm = T), mean(LCL95.female, na.rm = T), sd(rate.male, 
+    na.rm = T), sd(rate.female, na.rm = T), sd(LCL95.male, na.rm = T), 
+    sd(LCL95.female, na.rm = T), max(rate.male), max(rate.female), 
+    max(LCL95.male), max(LCL95.female), min(rate.male), min(rate.female), 
+    min(LCL95.male), min(LCL95.female))</code></pre>
+<pre><code>## # A tibble: 3,041 x 18
+## # Groups:   state [49]
+##    state county `mean(rate.male… `mean(rate.fema… `mean(LCL95.mal…
+##    &lt;fct&gt; &lt;I&lt;ch&gt;            &lt;dbl&gt;            &lt;dbl&gt;            &lt;dbl&gt;
+##  1 Alab… Autau…             283.             174.             243.
+##  2 Alab… Baldw…             239.             162              224.
+##  3 Alab… Barbo…             336.             185.             289.
+##  4 Alab… Bibb …             300.             168.             247.
+##  5 Alab… Bloun…             260.             172.             231.
+##  6 Alab… Bullo…             346.             140.             274.
+##  7 Alab… Butle…             272.             162.             229.
+##  8 Alab… Calho…             292.             176.             270 
+##  9 Alab… Chamb…             310.             165.             273.
+## 10 Alab… Chero…             286              141.             245.
+## # … with 3,031 more rows, and 13 more variables: `mean(LCL95.female, na.rm =
+## #   T)` &lt;dbl&gt;, `sd(rate.male, na.rm = T)` &lt;dbl&gt;, `sd(rate.female, na.rm =
+## #   T)` &lt;dbl&gt;, `sd(LCL95.male, na.rm = T)` &lt;dbl&gt;, `sd(LCL95.female, na.rm =
+## #   T)` &lt;dbl&gt;, `max(rate.male)` &lt;dbl&gt;, `max(rate.female)` &lt;dbl&gt;,
+## #   `max(LCL95.male)` &lt;dbl&gt;, `max(LCL95.female)` &lt;dbl&gt;, `min(rate.male)` &lt;dbl&gt;,
+## #   `min(rate.female)` &lt;dbl&gt;, `min(LCL95.male)` &lt;dbl&gt;,
+## #   `min(LCL95.female)` &lt;dbl&gt;</code></pre>
+</div>
+<div id="utilizing-the-mutate-function-we-create-new-columns-for-the-z-scores-of-each-numeric-variable.-the-z-score-is-the-number-of-standard-deviations-by-which-the-value-of-a-raw-score-is-above-or-below-the-mean-value-of-what-is-being-observed-or-measured.-examining-the-z-scores-for-each-column-it-is-evident-that-the-data-is-not-normally-distributed-as-most-values-are-not-within-the-expected-ranges-of-0.00---3.4-as-such-the-employment-of-this-type-of-analysis-will-not-be-useful-in-our-analysis.-despite-this-however-the-execution-of-this-function-was-useful-as-it-now-provides-us-a-better-idea-of-how-to-better-examine-our-data." class="section level3">
+<h3>Utilizing the <em>mutate</em> function, we create new columns for the z scores of each numeric variable. The Z score is the number of standard deviations by which the value of a raw score is above or below the mean value of what is being observed or measured. Examining the z-scores for each column it is evident that the data is not normally distributed (as most values are not within the expected ranges of 0.00 - 3.4), as such the employment of this type of analysis will not be useful in our analysis. Despite this however, the execution of this function was useful as it now provides us a better idea of how to better examine our data.</h3>
+<pre class="r"><code>zscore &lt;- function(x) (x - mean(x, na.rm = T))/sd(x, na.rm = T)
+cancer_z &lt;- cancer %&gt;% arrange(desc(rate.male)) %&gt;% mutate_at(1:6, 
+    list(z = scale))
+glimpse(cancer_z)</code></pre>
+<pre><code>## Rows: 3,041
+## Columns: 14
+## $ rate.male      &lt;dbl&gt; 629.1, 521.5, 451.9, 451.1, 447.6, 446.0, 437.2, 433.0…
+## $ LCL95.male     &lt;dbl&gt; 528.8, 481.0, 360.6, 259.8, 352.5, 408.6, 281.5, 330.1…
+## $ UCL95.male     &lt;dbl&gt; 752.8, 564.8, 561.0, 774.3, 566.8, 486.1, 653.3, 563.0…
+## $ rate.female    &lt;dbl&gt; 206.6, 357.2, 219.2, 234.6, 189.8, 197.9, NA, 231.4, 1…
+## $ LCL95.female   &lt;dbl&gt; 150.5, 330.6, 169.8, 136.3, 141.9, 174.8, NA, 168.6, 1…
+## $ UCL95.female   &lt;dbl&gt; 277.8, 385.5, 280.1, 397.8, 258.0, 223.6, NA, 311.3, 2…
+## $ state          &lt;fct&gt; Florida, Mississippi, Mississippi, Wisconsin, Virginia…
+## $ county         &lt;I&lt;chr&gt;&gt; Union County, Madison County, Humphreys County, Men…
+## $ rate.male_z    &lt;dbl[,1]&gt; &lt;matrix[26 x 1]&gt;
+## $ LCL95.male_z   &lt;dbl[,1]&gt; &lt;matrix[26 x 1]&gt;
+## $ UCL95.male_z   &lt;dbl[,1]&gt; &lt;matrix[26 x 1]&gt;
+## $ rate.female_z  &lt;dbl[,1]&gt; &lt;matrix[26 x 1]&gt;
+## $ LCL95.female_z &lt;dbl[,1]&gt; &lt;matrix[26 x 1]&gt;
+## $ UCL95.female_z &lt;dbl[,1]&gt; &lt;matrix[26 x 1]&gt;</code></pre>
+</div>
+<div id="using-the-select_if-function-we-eliminate-all-na-observations-and-run-a-correlation-between-all-numeric-variables.-from-the-correlation-table-it-is-clear-thar-most-numeric-variables-have-a-weak-positive-correlation.-to-bettervisualize-the-correlation-between-these-variable-we-create-a-heat-plot-using-the-pivot_longer-and-ggplot-functions.-in-viewing-the-plot-it-is-evident-our-earlier-observation-holds-true.-the-strongest-correlation-is-between-the-rate.male-and-lcl95.male-which-makes-sense-as-the-the-confidence-of-the-male-death-rate-is-intrisically-linked-to-the-male-death-rate-the-same-can-be-seen-for-the-female-death-rate-and-lcl95.female." class="section level3">
+<h3>Using the <em>select_if</em> function we eliminate all NA observations and run a correlation between all numeric variables. From the correlation table, it is clear thar most numeric variables have a weak positive correlation. To bettervisualize the correlation between these variable, we create a heat plot using the <em>pivot_longer</em> and <em>ggplot</em> functions. In viewing the plot, it is evident our earlier observation holds true. The strongest correlation is between the <em>rate.male</em> and <em>LCL95.male</em>, which makes sense as the the confidence of the male death rate is intrisically linked to the male death rate (the same can be seen for the female death rate and LCL95.female).</h3>
+<pre class="r"><code>cancer_no_na &lt;- cancer %&gt;% na.omit %&gt;% select_if(is.numeric)
+
+cor(cancer_no_na)</code></pre>
+<pre><code>##              rate.male  LCL95.male  UCL95.male rate.female LCL95.female
+## rate.male    1.0000000  0.88724478  0.83834912   0.4345144   0.35999686
+## LCL95.male   0.8872448  1.00000000  0.50035320   0.4158337   0.60270755
+## UCL95.male   0.8383491  0.50035320  1.00000000   0.3516767  -0.01269455
+## rate.female  0.4345144  0.41583365  0.35167665   1.0000000   0.81743780
+## LCL95.female 0.3599969  0.60270755 -0.01269455   0.8174378   1.00000000
+## UCL95.female 0.2562581 -0.05741418  0.59012205   0.6843047   0.15843115
+##              UCL95.female
+## rate.male      0.25625805
+## LCL95.male    -0.05741418
+## UCL95.male     0.59012205
+## rate.female    0.68430466
+## LCL95.female   0.15843115
+## UCL95.female   1.00000000</code></pre>
+<pre class="r"><code>cancer_cormat &lt;- cancer_no_na %&gt;% cor
+cancer_tidycor &lt;- cancer_cormat %&gt;% as.data.frame %&gt;% rownames_to_column(&quot;var1&quot;) %&gt;% 
+    pivot_longer(-1, names_to = &quot;var2&quot;, values_to = &quot;correlation&quot;)
+cancer_tidycor %&gt;% ggplot(aes(var1, var2, fill = correlation)) + 
+    geom_tile() + scale_fill_gradient2(low = &quot;red&quot;, mid = &quot;white&quot;, 
+    high = &quot;blue&quot;) + geom_text(aes(label = round(correlation, 
+    2)), color = &quot;black&quot;, size = 4) + theme(axis.text.x = element_text(angle = 90, 
+    hjust = 1)) + coord_fixed()</code></pre>
+<p><img src="/project/project1_files/figure-html/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="to-further-visualize-these-observations-we-create-three-more-plots-using-ggplot-two-bar-plots-and-a-scatterplot.-the-two-bar-plots-have-each-states-average-death-rate-for-each-sex.-in-examining-these-plots-it-is-clear-that-there-is-greater-variability-in-death-rates-between-males.-furthermore-it-can-be-seen-that-the-female-death-rate-is-generally-lower-than-the-males-with-the-average-being-in-the-range-of-the-upper-100s." class="section level3">
+<h3>To further visualize these observations we create three more plots using <em>ggplot</em>: two bar plots and a scatterplot. The two bar plots have each state's average death rate for each sex. In examining these plots, it is clear that there is greater variability in death rates between males. Furthermore, it can be seen that the female death rate is generally lower than the males, with the average being in the range of the upper 100s.</h3>
+</div>
+<div id="in-viewing-the-scatterplot-of-the-male-and-female-death-rates-i-hoped-to-create-a-view-of-each-states-death-rate-for-their-population.-from-the-plot-one-can-see-that-most-deaths-for-each-state-hover-around-the-200-400-per-100000." class="section level2">
+<h2>In viewing the scatterplot of the male and female death rates, I hoped to create a view of each state's death rate for their population. From the plot, one can see that most deaths for each state hover around the 200-400 per 100,000.</h2>
+<pre class="r"><code>ggplot(cancer_z, aes(x = state, y = rate.male, fill = LCL95.male)) + 
+    ggtitle(&quot;Average Rate of Death Due to Cancer for Males for Each State&quot;) + 
+    geom_bar(stat = &quot;summary&quot;, fun = mean, position = &quot;dodge&quot;, 
+        color = &quot;lightblue&quot;) + geom_errorbar(stat = &quot;summary&quot;, 
+    fun.data = mean_se, position = &quot;dodge&quot;) + theme(axis.text.x = element_text(angle = 90, 
+    hjust = 1, size = 6), legend.position = &quot;none&quot;) + theme(legend.title = element_text(color = &quot;blue&quot;, 
+    size = 14))</code></pre>
+<p><img src="/project/project1_files/figure-html/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggplot(cancer_z, aes(x = state, y = rate.female, fill = LCL95.female)) + 
+    ggtitle(&quot;Avverage Rate of Death Due to Cancer for Females for Each State&quot;) + 
+    geom_bar(stat = &quot;summary&quot;, fun = mean, position = &quot;dodge&quot;, 
+        color = &quot;pink&quot;) + geom_errorbar(stat = &quot;summary&quot;, fun.data = mean_se, 
+    position = &quot;dodge&quot;) + theme(axis.text.x = element_text(angle = 90, 
+    hjust = 1, size = 6), legend.position = &quot;none&quot;) + theme(legend.title = element_text(color = &quot;blue&quot;, 
+    size = 14))</code></pre>
+<p><img src="/project/project1_files/figure-html/unnamed-chunk-7-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggplot(cancer_z, aes(rate.female, rate.male, color = state)) + 
+    ggtitle(&quot;Rate of Death Due to Cancer for State&quot;) + geom_point() + 
+    scale_y_continuous(name = &quot;Rate of Death Due to Cancer for Males&quot;, 
+        limits = c(0, 650)) + scale_x_continuous(name = &quot;Rate of Death Due to Cancer for Females&quot;, 
+    limits = c(50, 400)) + theme(legend.text = element_text(color = &quot;black&quot;, 
+    size = 5))</code></pre>
+<p><img src="/project/project1_files/figure-html/unnamed-chunk-7-3.png" width="672" style="display: block; margin: auto;" /></p>
+<div id="using-pam-we-create-cluster-plots-with-the-no-na-version-of-our-dataset.-first-is-the-plot-with-the-male-death-rate-vs-the-female-death-rate.-in-creating-this-plot-it-is-clear-that-only-one-cluster-is-most-applicable-because-most-deaths-hover-around-the-200-400-range-as-stated-earlier.-next-we-plotted-the-lower-95-confidence-confidence-limits-for-each-sex-against-each-other-and-from-here-it-can-be-seen-that-one-cluster-is-most-applicable-once-again." class="section level3">
+<h3>Using <em>PAM</em> we create cluster plots with the no NA version of our dataset. First, is the plot with the male death rate vs the female death rate. In creating this plot, it is clear that only one cluster is most applicable, because most deaths hover around the 200-400 range (as stated earlier). Next, we plotted the lower 95 confidence confidence limits for each sex against each other, and from here it can be seen that one cluster is most applicable once again.</h3>
+<pre class="r"><code>library(cluster)
+clust_cancer &lt;- cancer_no_na %&gt;% dplyr::select(rate.male, rate.female)
+pam1 &lt;- clust_cancer %&gt;% pam(k = 2)
+pamclust &lt;- clust_cancer %&gt;% mutate(cluster = as.factor(pam1$clustering))
+pamclust %&gt;% ggplot(aes(rate.male, rate.female, color = cluster)) + 
+    ggtitle(&quot;Male Death Rate vs Female Death Rate&quot;) + geom_point()</code></pre>
+<p><img src="/project/project1_files/figure-html/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>pamclust %&gt;% group_by(cluster) %&gt;% summarize_if(is.numeric, mean, 
+    na.rm = T)</code></pre>
+<pre><code>## # A tibble: 2 x 3
+##   cluster rate.male rate.female
+##   &lt;fct&gt;       &lt;dbl&gt;       &lt;dbl&gt;
+## 1 1            295.        176.
+## 2 2            228.        156.</code></pre>
+<pre class="r"><code>clust_cancer &lt;- cancer_no_na %&gt;% dplyr::select(rate.male, rate.female)
+pam1 &lt;- clust_cancer %&gt;% pam(k = 1)
+pamclust &lt;- clust_cancer %&gt;% mutate(cluster = as.factor(pam1$clustering))
+pamclust %&gt;% ggplot(aes(rate.male, rate.female, color = cluster)) + 
+    ggtitle(&quot;Male Death Rate vs Female Death Rate&quot;) + geom_point()</code></pre>
+<p><img src="/project/project1_files/figure-html/unnamed-chunk-8-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>clust_cancer2 &lt;- cancer_no_na %&gt;% dplyr::select(LCL95.male, LCL95.female)
+pam1 &lt;- clust_cancer2 %&gt;% pam(k = 1)
+pamclust2 &lt;- clust_cancer2 %&gt;% mutate(cluster = as.factor(pam1$clustering))
+pamclust2 %&gt;% ggplot(aes(LCL95.male, LCL95.female, color = cluster)) + 
+    ggtitle(&quot;Lower 95 Confidence Limit for Males vs Lower 95 Confidence Limit for Females&quot;) + 
+    geom_point()</code></pre>
+<p><img src="/project/project1_files/figure-html/unnamed-chunk-8-3.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="from-these-observations-and-plots-we-can-see-that-the-effect-of-cancer-across-the-us-is-generally-the-same-despite-assumptions-about-the-different-types-of-healthcare-readily-available-in-each-area.-cancers-affect-on-the-us-population-results-in-a-200---400-death-rate-per-100000-individuals.-given-the-age-of-this-data-new-data-would-be-useful-in-examining-the-affect-of-cancer-across-the-us-the-innovations-in-healthcare-in-recent-years-may-have-an-effect-on-these-results.-moreover-the-data-does-not-include-the-states-of-hawaii-and-alaska-as-such-the-inclusions-of-the-data-from-those-states-will-provide-a-more-well-rounded-view-of-how-cancer-is-affecting-americans." class="section level3">
+<h3>From these observations and plots, we can see that the effect of cancer across the US is generally the same — despite assumptions about the different types of healthcare readily available in each area. Cancer's affect on the US population results in a 200 - 400 death rate per 100,000 individuals. Given the age of this data, new data would be useful in examining the affect of cancer across the US; the innovations in healthcare in recent years may have an effect on these results. Moreover, the data does not include the states of Hawaii and Alaska, as such the inclusions of the data from those states will provide a more well-rounded view of how cancer is affecting Americans.</h3>
+</div>
+</div>
+</div>

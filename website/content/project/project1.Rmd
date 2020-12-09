@@ -1,0 +1,131 @@
+---
+title: Project 1
+author: Ed Montemayor emm3945
+date: 10/6/2020
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = TRUE, fig.align = "center", warning = F, message = F,
+tidy=TRUE, tidy.opts=list(width.cutoff=60), R.options=list(max.print=100))
+```
+
+# Introduction
+### I have chosen the USCancerRates dataset for my project; this data set records the annual rates of death (1999-2003) due to cancer by sex in US counties. These observations were taken from the public reports of the National Vital Statistics System, which were in turn provided by hospitals around the country. This dataset contains the rate of death per 100,000 due to cancer among males and females, the 95% lower and upper confidence limit for each sex's rate of death, and the state and county for each observation. This dataset is interesting to me because I am interested in medicine and public health. I have no prior expectations for any trends or correlations, as healthcare around the US is generally standardized and cancer is an unpredictable disease (in regards to its affect and fatality).
+
+
+### First, we load the desired dataset from latticeExtra — specifically the dataset, *USCancerRates*. Next, we separate the dataset into two separate sets by piping the original dataset through the *select* function — specifying that the *title* variable is available in both new sets. It should be noted that the separation of the dataset was made at a random column. 
+```{R}
+library(tidyverse)
+library(dplyr)
+library(latticeExtra)
+library(data.table)
+library(tidyr)
+USCancerRates -> cancer
+cancer %>% select(county,state,1:4) -> cancer_1
+cancer %>% select(county,5:7) -> cancer_2
+
+```
+
+
+### Next, we *rejoin* the datasets again through the shared *county* variable; this is achieved by using the *left_join* function. I chose the join for no specific reason, I just needed to recombine the dataset again — as such, no cases were dropped (also meaning that there are no potential issues). To check that all columns and rows match we use *all_equal* on the original dataset and the newly combined one.
+```{R}
+
+left_join(cancer_1,cancer_2) -> combined_cancer_data
+all_equal(cancer,combined_cancer_data)
+
+```
+
+### Next, I *untidied* the dataset to see if it could yield more in-depth analysis. As such, I chose the male death rate for each state and placed those in new columns for each state. Upon comparing these new dataset with the original, it clear the original dataset was much more intuitive for analyzation, and so there is no need to utilize the untidy version of my dataset.
+```{R}
+
+combined_cancer_data%>%pivot_wider(names_from="state",values_from="rate.male") -> untidied_cancer
+
+
+```
+
+### In viewing the dataset I noticed a single county outlier that was far from all other observations. To see if how much this would affect my analysis I decided to *filter* it out. A vast majority of the death rates for each county are above 100, and so I presumed that running summary functions on a *filtered* version of the dataset would not affect the results much. In comparing the summaries for both the filtered and original it is clear that this postulation holds true. Be that as it may, we will continue to utilize the orignal data as removing observations unneccesarily is not good analyzational practice. In general, the mean death rate for males in the country is about 257, and about 169 for females. This indicates that the disease may be more fatal to males in the country.
+
+### In running further summary statistics, grouping by state, then county, then by both, some results are clear. On average, Mississippi and Louisiana hold the highest male death, despite both not having the largest amount of counties. By state the highest male death rate goes to Florida, with 629, and the highest female death rate goes to Wymoing, with 303. In comparing these values with the other ones seen throughout the table, one can assume that there is higher variability in cancer's affects on males. Moreover, the overall  average death rate for females is generally the same across all states. Examining the average death rate for each county, it is clear that most death rates hover around the 200 - 300 range. From this we can conclude that cancer does not have more discernable effects on individuals regardless of state or county.
+```{R}
+
+cancer %>% filter(rate.male > 80) -> cancer_filtered
+glimpse(cancer_filtered)
+
+cancer_filtered %>% summarize(n_distinct(county),mean(rate.male, na.rm=T),mean(rate.female, na.rm=T),mean(LCL95.male, na.rm=T),mean(LCL95.female, na.rm=T),sd(rate.male, na.rm=T),sd(rate.female, na.rm=T),sd(LCL95.male, na.rm=T),sd(LCL95.female, na.rm=T),max(rate.male),max(rate.female),max(LCL95.male),max(LCL95.female),min(rate.male),min(rate.female),min(LCL95.male),min(LCL95.female))
+
+cancer %>% summarize(n_distinct(county),mean(rate.male, na.rm=T),mean(rate.female, na.rm=T),mean(LCL95.male, na.rm=T),mean(LCL95.female, na.rm=T),sd(rate.male, na.rm=T),sd(rate.female, na.rm=T),sd(LCL95.male, na.rm=T),sd(LCL95.female, na.rm=T),max(rate.male),max(rate.female),max(LCL95.male),max(LCL95.female),min(rate.male),min(rate.female),min(LCL95.male),min(LCL95.female))
+
+cancer %>% group_by(state)%>% summarize(n_distinct(county),mean(rate.male, na.rm=T),mean(rate.female, na.rm=T),mean(LCL95.male, na.rm=T),mean(LCL95.female, na.rm=T),sd(rate.male, na.rm=T),sd(rate.female, na.rm=T),sd(LCL95.male, na.rm=T),sd(LCL95.female, na.rm=T),max(rate.male),max(rate.female),max(LCL95.male),max(LCL95.female),min(rate.male),min(rate.female),min(LCL95.male),min(LCL95.female))
+
+cancer %>% group_by(county)%>%summarize(n_distinct(state),mean(rate.male, na.rm=T),mean(rate.female, na.rm=T),mean(LCL95.male, na.rm=T),mean(LCL95.female, na.rm=T),sd(rate.male, na.rm=T),sd(rate.female, na.rm=T),sd(LCL95.male, na.rm=T),sd(LCL95.female, na.rm=T),max(rate.male),max(rate.female),max(LCL95.male),max(LCL95.female),min(rate.male),min(rate.female),min(LCL95.male),min(LCL95.female))
+
+cancer %>% group_by(state,county)%>%summarize(mean(rate.male, na.rm=T),mean(rate.female, na.rm=T),mean(LCL95.male, na.rm=T),mean(LCL95.female, na.rm=T),sd(rate.male, na.rm=T),sd(rate.female, na.rm=T),sd(LCL95.male, na.rm=T),sd(LCL95.female, na.rm=T),max(rate.male),max(rate.female),max(LCL95.male),max(LCL95.female),min(rate.male),min(rate.female),min(LCL95.male),min(LCL95.female))
+
+```
+
+
+### Utilizing the *mutate* function, we create new columns for the z scores of each numeric variable. The Z score is the number of standard deviations by which the value of a raw score is above or below the mean value of what is being observed or measured. Examining the z-scores for each column it is evident that the data is not normally distributed (as most values are not within the expected ranges of 0.00 - 3.4), as such the employment of this type of analysis will not be useful in our analysis. Despite this however, the execution of this function was useful as it now provides us a better idea of how to better examine our data.
+```{R}
+zscore <- function(x) (x-mean(x, na.rm=T)) / sd(x, na.rm=T)
+cancer %>% arrange(desc(rate.male)) %>% mutate_at(1:6, list(z=scale)) -> cancer_z
+glimpse(cancer_z)
+```
+
+
+
+### Using the *select_if* function we eliminate all NA observations and run a correlation between all numeric variables. From the correlation table, it is clear thar most numeric variables have a weak positive correlation. To bettervisualize the correlation between these variable, we create a heat plot using the *pivot_longer* and *ggplot* functions. In viewing the plot, it is evident our earlier observation holds true. The strongest correlation is between the *rate.male* and *LCL95.male*, which makes sense as the the confidence of the male death rate is intrisically linked to the male death rate (the same can be seen for the female death rate and LCL95.female).
+```{R}
+
+cancer %>% na.omit %>% select_if(is.numeric) -> cancer_no_na
+
+cor(cancer_no_na)
+cancer_cormat <- cancer_no_na %>% cor
+cancer_cormat %>% as.data.frame %>% rownames_to_column("var1") %>% pivot_longer(-1, names_to="var2", values_to="correlation") -> cancer_tidycor
+cancer_tidycor %>% ggplot(aes(var1,var2,fill=correlation))+geom_tile()+scale_fill_gradient2(low="red",mid="white",high="blue")+geom_text(aes(label=round(correlation,2)),color = "black", size = 4)+theme(axis.text.x = element_text(angle = 90, hjust = 1))+coord_fixed()
+
+
+```
+
+
+### To further visualize these observations we create three more plots using *ggplot*: two bar plots and a scatterplot. The two bar plots have each state's average death rate for each sex. In examining these plots, it is clear that there is greater variability in death rates between males. Furthermore, it can be seen that the female death rate is generally lower than the males, with the average being in the range of the upper 100s. 
+## In viewing the scatterplot of the male and female death rates, I hoped to create a view of each state's death rate for their population. From the plot, one can see that most deaths for each state hover around the 200-400 per 100,000. 
+```{R}
+
+ggplot(cancer_z, aes(x = state, y = rate.male, fill=LCL95.male))+ ggtitle("Average Rate of Death Due to Cancer for Males for Each State")+geom_bar(stat="summary", fun=mean, position="dodge",color = 'lightblue')+geom_errorbar(stat="summary", fun.data=mean_se, position="dodge")+theme(axis.text.x = element_text(angle=90, hjust=1, size=6),legend.position="none")+ theme(legend.title = element_text(color = "blue", size = 14))
+
+ggplot(cancer_z, aes(x = state, y = rate.female, fill=LCL95.female))+ ggtitle("Avverage Rate of Death Due to Cancer for Females for Each State")+geom_bar(stat="summary", fun=mean, position="dodge",color = 'pink')+geom_errorbar(stat="summary", fun.data=mean_se, position="dodge")+theme(axis.text.x = element_text(angle=90, hjust=1, size=6),legend.position="none")+ theme(legend.title = element_text(color = "blue", size = 14))
+
+
+ggplot(cancer_z, aes(rate.female, rate.male, color=state))+ ggtitle("Rate of Death Due to Cancer for State")+geom_point()+scale_y_continuous(name="Rate of Death Due to Cancer for Males", limits=c(0,650))+scale_x_continuous(name="Rate of Death Due to Cancer for Females", limits=c(50,400))+theme(legend.text = element_text(color = "black", size = 5))
+
+
+```
+
+
+### Using *PAM* we create cluster plots with the no NA version of our dataset. First, is the plot with the male death rate vs the female death rate. In creating this plot, it is clear that only one cluster is most applicable, because most deaths hover around the 200-400 range (as stated earlier). Next, we plotted the lower 95 confidence confidence limits for each sex against each other, and from here it can be seen that one cluster is most applicable once again. 
+```{R}
+library(cluster)
+clust_cancer<-cancer_no_na%>%dplyr::select(rate.male,rate.female)
+pam1<-clust_cancer%>%pam(k=2)
+pamclust<-clust_cancer%>%mutate(cluster=as.factor(pam1$clustering))
+pamclust%>%ggplot(aes(rate.male,rate.female,color=cluster))+ggtitle("Male Death Rate vs Female Death Rate")+geom_point() 
+
+pamclust%>%group_by(cluster)%>%summarize_if(is.numeric,mean,na.rm=T)
+
+
+clust_cancer<-cancer_no_na%>%dplyr::select(rate.male,rate.female)
+pam1<-clust_cancer%>%pam(k=1)
+pamclust<-clust_cancer%>%mutate(cluster=as.factor(pam1$clustering))
+pamclust%>%ggplot(aes(rate.male,rate.female,color=cluster))+ ggtitle("Male Death Rate vs Female Death Rate")+geom_point() 
+
+
+
+clust_cancer2<-cancer_no_na%>%dplyr::select(LCL95.male,LCL95.female)
+pam1<-clust_cancer2%>%pam(k=1)
+pamclust2<-clust_cancer2%>%mutate(cluster=as.factor(pam1$clustering))
+pamclust2%>%ggplot(aes(LCL95.male,LCL95.female,color=cluster))+ ggtitle("Lower 95 Confidence Limit for Males vs Lower 95 Confidence Limit for Females")+geom_point()
+
+```
+
+### From these observations and plots, we can see that the effect of cancer across the US is generally the same — despite assumptions about the different types of healthcare readily available in each area. Cancer's affect on the US population results in a 200 - 400 death rate per 100,000 individuals. Given the age of this data, new data would be useful in examining the affect of cancer across the US; the innovations in healthcare in recent years may have an effect on these results. Moreover, the data does not include the states of Hawaii and Alaska, as such the inclusions of the data from those states will provide a more well-rounded view of how cancer is affecting Americans. 
